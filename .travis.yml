@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t baze/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run baze/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t baze/multi-client ./client
+  - docker build -t baze/multi-nginx ./nginx
+  - docker build -t baze/multi-server ./server
+  - docker build -t baze/multi-worker ./worker
+#Log to docker, in order to push my images to hub.docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+#THE VARS with my docker username and password created on travis-ci.org
+  - docker push baze/multi-client
+  - docker push baze/multi-nginx
+  - docker push baze/multi-server
+  - docker push baze/multi-worker
